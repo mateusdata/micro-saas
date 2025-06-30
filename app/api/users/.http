@@ -1,0 +1,18 @@
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Lucas",
+  "email": "lucas@email.com",
+  "password": "senhaSegura123"
+}
+
+###
+PUT http://localhost:3000/api/users?id=1
+Content-Type: application/json
+
+{
+  "name": "Mateus",
+  "email": "mateus@email.com",
+  "password": "senhaSegura123"
+}
