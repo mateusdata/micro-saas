@@ -35,7 +35,7 @@ export default function SignUp() {
     }
 
     try {
-      const res = await axios.post("/api/sign-up", user);
+      const res = await axios.post("/api/users", user);
       const data = res.data;
       const { token, ...userWithoutToken } = data;
       localStorage.setItem("user", JSON.stringify(userWithoutToken));
