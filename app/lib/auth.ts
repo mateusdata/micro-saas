@@ -3,19 +3,14 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-interface FormData {
-  name: string;
-  email: string;
-  password: string;
-  token?: string;
-}
 
-export async function login(formData: FormData) {
+export async function login(token: string) {
   const cookieStore = cookies();
   // console.log("Usuário autenticado:", formData);
   // Manipular cookies ou realizar outras operações server-side
-  (await cookieStore).set("user", JSON.stringify(formData), { httpOnly: true });
-  
+  console.log("🔒 Login realizado com sucesso, token:", token);
+  (await cookieStore).set("token", token, { httpOnly: false });
+
   return { success: true, message: "Login realizado com sucesso!" };
-  
+
 }

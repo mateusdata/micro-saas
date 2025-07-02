@@ -1,35 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 
-const publicRoutes = [
-  '/',
-  '/sign-in',
-  '/sign-up',
-];
+const publicRoutes = ["/", "/sign-in", "/sign-up"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   console.log("Middleware executado");
-  const userCookie = request.cookies.get("user");
-  const user = userCookie?.value ? JSON.parse(userCookie.value) : null;
-  //console.log("Cookie do usuário:", user);
-  //console.log("Rota atual:", request.nextUrl.pathname);
-  // Verifica se a rota é pública
-  
-  if (publicRoutes.includes(request.nextUrl.pathname)) {
-    // Se a rota for pública, permite o acesso sem autenticação
+
+  const { pathname } = request.nextUrl;
+  const token = request.cookies.get("token")?.value;
+
+  if (publicRoutes.includes(pathname)) {
+    console.log(`Acesso liberado à rota pública: ${pathname}`);
     return NextResponse.next();
   }
 
-  if (!user) {
-    console.log("Usuário não autenticado, redirecionando para a página de login");
-
-    return NextResponse.redirect(new URL('/sign-in', request.url));
+  if (!token) {
+    console.warn("Token não encontrado, redirecionando para /sign-in");
+    return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
-  return NextResponse.next();
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+  try {
+    const payload = await jwtVerify(token, secret);
+    console.log("JWT válido (payload):", payload);
+    return NextResponse.next();
+  } catch (err) {
+    console.warn("JWT inválido ou expirado:", err);
+    return NextResponse.redirect(new URL("/sign-in", request.url));
+  }
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|$).*)' // tudo exceto api, estáticos, favicon e a rota raiz (/)
-  ],
-}
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|$).*)"],
+};

@@ -1,33 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { login } from "@/app/lib/auth";
+import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { z } from "zod";
+import { login } from "@/app/lib/auth";
 
-interface FormatUser {
-  name: string;
-  email: string;
-  password: string;
-  token: string;
-}
-interface FormatResult {
-  success: boolean;
-  message: string;
-}
+const userSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(1, "Senha obrigatória"),
+});
+
+type UserInput = z.infer<typeof userSchema>;
 
 export default function SignIn() {
-  const [user, setUser] = useState<FormatUser>({
-    name: "",
-    email: "",
-    password: "",
-    token: "123token",
-  });
+  const [user, setUser] = useState<UserInput>({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-
-  const validateEmail = (email: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -37,46 +27,34 @@ export default function SignIn() {
     e.preventDefault();
     setError(null);
 
-    if (!validateEmail(user.email)) {
-      setError("Email inválido.");
-      return;
-    }
-    if (user.password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres.");
+    const parsed = userSchema.safeParse(user);
+    if (!parsed.success) {
+      setError(parsed.error.errors[0].message);
       return;
     }
 
     try {
-      const result: FormatResult = await login(user);
-      if (result.success) {
-        localStorage.setItem("user", JSON.stringify(user));
-        router.push("/dashboard");
-      } else {
-        setError(result.message);
-      }
-    } catch (error) {
+      const res = await axios.post("/api/login", user);
+      const data = res.data;
+      const { token, ...userWithoutToken } = data;
+      localStorage.setItem("user", JSON.stringify(userWithoutToken));
+      login(data.token);
+      router.push("/dashboard");
+      console.log(data);
+      
+    } catch (err) {
+      console.log("error", err);
       setError("Erro ao fazer login.");
     }
   };
 
   return (
     <div className="flex items-center justify-center h-screen flex-col gap-4">
-
       <form
         onSubmit={handleLogin}
-        className=" shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col gap-4 w-80"
+        className="shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col gap-4 w-80"
       >
         <h2 className="text-xl text-center font-bold mb-2">Entrar</h2>
-        <input
-          className="border rounded px-3 py-2"
-          type="text"
-          name="name"
-          placeholder="Nome"
-          value={user.name}
-          onChange={handleChange}
-          required
-          autoComplete="off"
-        />
         <input
           className="border rounded px-3 py-2"
           type="email"
@@ -95,12 +73,11 @@ export default function SignIn() {
           value={user.password}
           onChange={handleChange}
           required
-          autoComplete="new-password"
+          autoComplete="off"
         />
         <Link href="/sign-up" className="text-blue-500 text-right hover:underline">
           Criar conta
         </Link>
-
         {error && <div className="text-red-500 text-sm">{error}</div>}
         <button
           type="submit"
@@ -109,7 +86,6 @@ export default function SignIn() {
           Fazer login
         </button>
       </form>
-
     </div>
   );
 }

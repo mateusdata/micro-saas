@@ -12,6 +12,9 @@ export interface FormatUser {
   email: string;
   password: string;
   token: string;
+  createdAt: string;
+  updatedAt: string;
+  id: string;
 }
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
