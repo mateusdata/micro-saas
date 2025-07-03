@@ -48,7 +48,7 @@ export function LoginForm({
       const data = res.data;
       const { token, ...userWithoutToken } = data;
       localStorage.setItem("user", JSON.stringify(userWithoutToken));
-      login(data.token);
+      await login(data.token);
       router.push("/dashboard");
     } catch (err) {
       console.error("Erro:", err);
