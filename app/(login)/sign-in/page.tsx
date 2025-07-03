@@ -1,91 +1,32 @@
-"use client";
+import { GalleryVerticalEnd } from "lucide-react"
 
-import { useState } from "react";
-import axios from "axios";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { z } from "zod";
-import { login } from "@/app/lib/auth";
+import { LoginForm } from "@/components/login-form"
 
-const userSchema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(1, "Senha obrigatória"),
-});
-
-type UserInput = z.infer<typeof userSchema>;
-
-export default function SignIn() {
-  const [user, setUser] = useState<UserInput>({ email: "", password: "" });
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUser({ ...user, [e.target.name]: e.target.value });
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    const parsed = userSchema.safeParse(user);
-    if (!parsed.success) {
-      setError(parsed.error.errors[0].message);
-      return;
-    }
-
-    try {
-      const res = await axios.post("/api/login", user);
-      const data = res.data;
-      const { token, ...userWithoutToken } = data;
-      localStorage.setItem("user", JSON.stringify(userWithoutToken));
-      login(data.token);
-      router.push("/dashboard");
-      console.log(data);
-      
-    } catch (err) {
-      console.log("error", err);
-      setError("Erro ao fazer login.");
-    }
-  };
-
+export default function LoginPage() {
   return (
-    <div className="flex items-center justify-center h-screen flex-col gap-4">
-      <form
-        onSubmit={handleLogin}
-        className="shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col gap-4 w-80"
-      >
-        <h2 className="text-xl text-center font-bold mb-2">Entrar</h2>
-        <input
-          className="border rounded px-3 py-2"
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={user.email}
-          onChange={handleChange}
-          required
-          autoComplete="off"
+    <div className="grid min-h-svh lg:grid-cols-2">
+      <div className="flex flex-col  gap-4 p-6 md:p-10">
+        <div className="flex justify-center gap-2 md:justify-start">
+          <a href="#" className="flex items-center gap-2 font-medium">
+            <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+              <GalleryVerticalEnd className="size-4" />
+            </div>
+           Micro SaaS
+          </a>
+        </div>
+        <div className="flex flex-1 items-center justify-center">
+          <div className="w-full max-w-xs">
+            <LoginForm />
+          </div>
+        </div>
+      </div>
+      <div className="bg-muted relative hidden lg:block">
+        <img
+          src="https://agilize.com.br/blog/wp-content/uploads/2024/03/Untitled-3-1.webp"
+          alt="Image"
+          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.3] dark:grayscale-50"
         />
-        <input
-          className="border rounded px-3 py-2"
-          type="password"
-          name="password"
-          placeholder="Senha"
-          value={user.password}
-          onChange={handleChange}
-          required
-          autoComplete="off"
-        />
-        <Link href="/sign-up" className="text-blue-500 text-right hover:underline">
-          Criar conta
-        </Link>
-        {error && <div className="text-red-500 text-sm">{error}</div>}
-        <button
-          type="submit"
-          className="rounded px-1 bg-blue-900 hover:bg-blue-700"
-        >
-          Fazer login
-        </button>
-      </form>
+      </div>
     </div>
-  );
+  )
 }

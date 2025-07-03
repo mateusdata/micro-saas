@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 export async function logout() {
   const cookieStore = cookies();
-  (await cookieStore).delete("user");
+  (await cookieStore).delete("token");
   redirect("/sign-in");
  
 }
